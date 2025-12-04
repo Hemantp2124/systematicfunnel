@@ -2,6 +2,7 @@
 import { DocType, HierarchyNode } from '../types';
 
 export const HIERARCHY_GROUPS = [
+  "0. Strategic Analysis",
   "1. Strategy & Context",
   "2. Product Requirements",
   "3. Architecture & Design",
@@ -14,6 +15,35 @@ export const HIERARCHY_GROUPS = [
 ];
 
 export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
+  // 0. Strategic Analysis (The Brain)
+  [DocType.GROWTH_PLAYBOOK]: {
+    id: DocType.GROWTH_PLAYBOOK,
+    title: "0.1 Growth Playbook Analysis",
+    category: "0. Strategic Analysis",
+    owner: "Founder / Strategist",
+    cta: "Review Analysis → Start Strategy",
+    description: "Deep analysis using the Big Product Growth Playbook (Market, MVP, Wedge, Scale).",
+    nextDocs: [DocType.STRATEGY_VISION]
+  },
+  [DocType.IDEA_VALIDATION]: {
+    id: DocType.IDEA_VALIDATION,
+    title: "0.2 Idea Validation Funnel",
+    category: "0. Strategic Analysis",
+    owner: "Founder",
+    cta: "Validate → Cross-Question",
+    description: "9-stage validation: Problem, USP, MVP, Feasibility, Revenue.",
+    nextDocs: [DocType.CROSS_QUESTIONING]
+  },
+  [DocType.CROSS_QUESTIONING]: {
+    id: DocType.CROSS_QUESTIONING,
+    title: "0.3 Strategic Audit",
+    category: "0. Strategic Analysis",
+    owner: "AI Auditor",
+    cta: "Audit Complete → Vision",
+    description: "Rigorous cross-questioning framework to challenge assumptions.",
+    nextDocs: [DocType.STRATEGY_VISION]
+  },
+
   // 1. Strategy
   [DocType.STRATEGY_VISION]: {
     id: DocType.STRATEGY_VISION,
@@ -60,20 +90,29 @@ export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
     owner: "Business Lead",
     cta: "Sign-off BRD → Generate PRD",
     description: "High-level business goals, scope, stakeholders, and financial constraints.",
-    nextDocs: [DocType.PRODUCT_PRD, DocType.BIZ_GTM]
+    nextDocs: [DocType.PRODUCT_PRD]
   },
   [DocType.PRODUCT_PRD]: {
     id: DocType.PRODUCT_PRD,
     title: "2.2 Product Requirements (PRD)",
     category: "2. Product Requirements",
     owner: "Product Manager",
-    cta: "Sign-off PRD → Define User Stories",
+    cta: "Sign-off PRD → Requirements Matrix",
     description: "Detailed functional requirements, features, and system behavior.",
-    nextDocs: [DocType.PRODUCT_STORIES, DocType.ARCH_OVERVIEW]
+    nextDocs: [DocType.REQUIREMENTS_MATRIX]
+  },
+  [DocType.REQUIREMENTS_MATRIX]: {
+    id: DocType.REQUIREMENTS_MATRIX,
+    title: "2.3 Requirements Matrix",
+    category: "2. Product Requirements",
+    owner: "System Architect Agent",
+    cta: "Review Matrix → User Stories",
+    description: "Structured table of Requirements, User Stories, Risks, and Tech suggestions.",
+    nextDocs: [DocType.PRODUCT_STORIES]
   },
   [DocType.PRODUCT_STORIES]: {
     id: DocType.PRODUCT_STORIES,
-    title: "2.3 Feature Specs & Stories",
+    title: "2.4 Feature Specs & Stories",
     category: "2. Product Requirements",
     owner: "PM / Tech Lead",
     cta: "Freeze Stories → Estimation",
@@ -82,7 +121,7 @@ export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
   },
   [DocType.PRODUCT_DOMAIN]: {
     id: DocType.PRODUCT_DOMAIN,
-    title: "2.4 Domain Models & Glossary",
+    title: "2.5 Domain Models & Glossary",
     category: "2. Product Requirements",
     owner: "PM / Architect",
     cta: "Approve Domain → Sync DB Design",
@@ -98,38 +137,47 @@ export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
     owner: "Solution Architect",
     cta: "Approve Arch → Detailed Design",
     description: "High-level system design, technology choices, and diagram descriptions.",
-    nextDocs: [DocType.ARCH_COMPONENTS, DocType.ARCH_DB, DocType.ARCH_API]
+    nextDocs: [DocType.ARCH_DESIGN_MATRIX]
+  },
+  [DocType.ARCH_DESIGN_MATRIX]: {
+    id: DocType.ARCH_DESIGN_MATRIX,
+    title: "3.2 Design & Architecture Matrix",
+    category: "3. Architecture & Design",
+    owner: "Solution Architect Agent",
+    cta: "Approve Design → Components",
+    description: "Modular folder structure, API contracts, and reusable components plan.",
+    nextDocs: [DocType.ARCH_COMPONENTS]
   },
   [DocType.ARCH_COMPONENTS]: {
     id: DocType.ARCH_COMPONENTS,
-    title: "3.2 Component Design",
+    title: "3.3 Component Design",
     category: "3. Architecture & Design",
     owner: "Tech Lead",
     cta: "Finalize Map → Implementation",
     description: "Detailed breakdown of services, modules, and their interactions.",
-    nextDocs: []
+    nextDocs: [DocType.ARCH_DB]
   },
   [DocType.ARCH_DB]: {
     id: DocType.ARCH_DB,
-    title: "3.3 Database Design",
+    title: "3.4 Database Design",
     category: "3. Architecture & Design",
     owner: "Data Engineer",
     cta: "Schema Approved → Migration Plan",
     description: "ER Diagrams, schema definitions, and indexing strategies.",
-    nextDocs: []
+    nextDocs: [DocType.ARCH_API]
   },
   [DocType.ARCH_API]: {
     id: DocType.ARCH_API,
-    title: "3.4 Integration & API Design",
+    title: "3.5 Integration & API Design",
     category: "3. Architecture & Design",
     owner: "Backend Lead",
     cta: "API Spec Frozen → SDK Tasks",
     description: "REST/GraphQL API specifications, endpoints, and contracts.",
-    nextDocs: []
+    nextDocs: [DocType.ARCH_UX]
   },
   [DocType.ARCH_UX]: {
     id: DocType.ARCH_UX,
-    title: "3.5 UX / UI Design Guidelines",
+    title: "3.6 UX / UI Design Guidelines",
     category: "3. Architecture & Design",
     owner: "Product Designer",
     cta: "Designs Approved → Frontend Build",
@@ -145,29 +193,38 @@ export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
     owner: "Tech Lead",
     cta: "Repo Set → Onboard Devs",
     description: "Repository structure, key modules, and architectural patterns in code.",
+    nextDocs: [DocType.CODE_SCAFFOLD]
+  },
+  [DocType.CODE_SCAFFOLD]: {
+    id: DocType.CODE_SCAFFOLD,
+    title: "4.2 Code Scaffolding",
+    category: "4. Implementation & Code",
+    owner: "AI Generator",
+    cta: "Review Code → Implementation",
+    description: "Auto-generated boilerplate code for the project.",
+    nextDocs: [DocType.CODE_IMPLEMENTATION]
+  },
+  [DocType.CODE_IMPLEMENTATION]: {
+    id: DocType.CODE_IMPLEMENTATION,
+    title: "4.3 Core Feature Implementation",
+    category: "4. Implementation & Code",
+    owner: "Coding Assistant Agent",
+    cta: "Review Code → Commit",
+    description: "Production-ready, concise code implementation for core features.",
     nextDocs: [DocType.CODE_STANDARDS]
   },
   [DocType.CODE_STANDARDS]: {
     id: DocType.CODE_STANDARDS,
-    title: "4.2 Coding Standards",
+    title: "4.4 Coding Standards",
     category: "4. Implementation & Code",
     owner: "Principal Engineer",
     cta: "Standards Agreed → Enforce",
     description: "Linting rules, style guides, and code review practices.",
     nextDocs: []
   },
-  [DocType.CODE_SCAFFOLD]: {
-    id: DocType.CODE_SCAFFOLD,
-    title: "4.3 Code Scaffolding",
-    category: "4. Implementation & Code",
-    owner: "AI Generator",
-    cta: "Review Code → Commit",
-    description: "Auto-generated boilerplate code for the project.",
-    nextDocs: []
-  },
   [DocType.CODE_ENV]: {
     id: DocType.CODE_ENV,
-    title: "4.4 Config & Environment",
+    title: "4.5 Config & Environment",
     category: "4. Implementation & Code",
     owner: "DevOps",
     cta: "Config Doc'd → Deployment",
@@ -268,6 +325,15 @@ export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
     owner: "Support Lead",
     cta: "FAQ Updated → Chatbot",
     description: "Common questions and troubleshooting steps.",
+    nextDocs: [DocType.USER_ADMIN]
+  },
+  [DocType.USER_ADMIN]: {
+    id: DocType.USER_ADMIN,
+    title: "7.5 Admin & Support Docs",
+    category: "7. User & Customer Docs",
+    owner: "Support Lead",
+    cta: "Docs Approved → Publish",
+    description: "Documentation for system administrators and support agents.",
     nextDocs: []
   },
 
@@ -297,7 +363,7 @@ export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
     owner: "Sales Lead",
     cta: "Playbooks Ready → Train",
     description: "Sales scripts, battle cards, and objection handling.",
-    nextDocs: []
+    nextDocs: [DocType.BIZ_LEGAL]
   },
   [DocType.BIZ_LEGAL]: {
     id: DocType.BIZ_LEGAL,
@@ -306,6 +372,15 @@ export const DOC_HIERARCHY: Record<string, HierarchyNode> = {
     owner: "Legal Counsel",
     cta: "Policies Signed → Publish",
     description: "Terms of Service, Privacy Policy, and compliance requirements.",
+    nextDocs: [DocType.INVESTOR_PACKAGE]
+  },
+  [DocType.INVESTOR_PACKAGE]: {
+    id: DocType.INVESTOR_PACKAGE,
+    title: "8.5 Investor Export Package",
+    category: "8. Business & GTM",
+    owner: "Founder",
+    cta: "Download → Pitch",
+    description: "Premium bundle: Executive Summary, Pitch Deck, and Financial Model.",
     nextDocs: []
   },
 

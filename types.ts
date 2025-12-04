@@ -8,6 +8,11 @@ export interface User {
 }
 
 export enum DocType {
+  // 0. Pre-Analysis (The "Brain")
+  GROWTH_PLAYBOOK = 'growth_playbook', // Phase 0: Strategic Analysis
+  IDEA_VALIDATION = 'idea_validation', // Phase 0: Validation
+  CROSS_QUESTIONING = 'cross_questioning', // Phase 0: Audit
+
   // 1. Strategy
   STRATEGY_VISION = 'strategy_vision',
   STRATEGY_MARKET = 'strategy_market',
@@ -17,11 +22,13 @@ export enum DocType {
   // 2. Product
   PRODUCT_BRD = 'product_brd',
   PRODUCT_PRD = 'product_prd',
+  REQUIREMENTS_MATRIX = 'requirements_matrix', // System Architect Agent
   PRODUCT_STORIES = 'product_stories',
   PRODUCT_DOMAIN = 'product_domain',
 
   // 3. Architecture
   ARCH_OVERVIEW = 'arch_overview',
+  ARCH_DESIGN_MATRIX = 'arch_design_matrix', // Solution Architect Agent
   ARCH_COMPONENTS = 'arch_components',
   ARCH_DB = 'arch_db',
   ARCH_API = 'arch_api',
@@ -29,6 +36,7 @@ export enum DocType {
 
   // 4. Implementation
   CODE_OVERVIEW = 'code_overview',
+  CODE_IMPLEMENTATION = 'code_implementation', // Coding Assistant Agent
   CODE_STANDARDS = 'code_standards',
   CODE_SCAFFOLD = 'code_scaffold', 
   CODE_ENV = 'code_env',
@@ -57,12 +65,13 @@ export enum DocType {
   BIZ_GTM = 'biz_gtm',
   BIZ_SALES = 'biz_sales',
   BIZ_LEGAL = 'biz_legal',
+  INVESTOR_PACKAGE = 'investor_package',
 
   // 9. Process
   PROCESS_ROADMAP = 'process_roadmap',
   PROCESS_ADR = 'process_adr',
   
-  // Legacy / Aliases (mapped for backward compatibility in generic logic)
+  // Legacy / Aliases
   PRD = 'product_prd',
   BRD = 'product_brd',
   ARCHITECTURE = 'arch_overview',
@@ -74,8 +83,8 @@ export enum DocType {
   DEPLOYMENT = 'ops_deploy',
   USER_DOCS = 'user_guides',
   COMPETITOR_ANALYSIS = 'strategy_market',
-  AUTH_SYSTEM = 'arch_components_auth', // special case
-  BILLING_SYSTEM = 'biz_pricing_sys', // special case
+  AUTH_SYSTEM = 'arch_components',
+  BILLING_SYSTEM = 'biz_pricing',
   CI_CD_PIPELINE = 'ops_cicd',
   OBSERVABILITY_CONFIG = 'ops_monitoring'
 }
@@ -118,6 +127,8 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   competitors?: string[];
+  strategicAnalysis?: any; // Result of the Growth Playbook analysis
+  funnelId?: string;
 }
 
 export interface AIGenerationRequest {
@@ -130,6 +141,7 @@ export interface AIGenerationRequest {
     budget: string;
     timeline: string;
   };
+  strategicContext?: string; // Phase 0 output injected here
 }
 
 export interface WizardState {

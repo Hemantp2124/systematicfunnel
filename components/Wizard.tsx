@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowRight, Check, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { X, ArrowRight, Check, Sparkles, Plus, Trash2, Rocket, Code, Layers, Zap, Shield, Loader2, Wand2 } from 'lucide-react';
 import { Project } from '../types';
+import { FUNNELS } from '../data/funnels';
+import { generateProjectSpecs } from '../api/aiService';
 
 interface WizardProps {
   onClose: () => void;
@@ -9,14 +11,15 @@ interface WizardProps {
 }
 
 const Wizard: React.FC<WizardProps> = ({ onClose, onSubmit, initialData }) => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
+  const [selectedFunnelId, setSelectedFunnelId] = useState<string>('founder_launch');
+  const [isBrainstorming, setIsBrainstorming] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     problem: '',
     audience: '',
     concept: '',
     features: [''] as string[],
-    launchDate: '',
     tech: [] as string[],
     budget: 'Small Budget ($5-25k)',
     timeline: 'Normal (3-6 months)',
@@ -31,9 +34,10 @@ const Wizard: React.FC<WizardProps> = ({ onClose, onSubmit, initialData }) => {
         concept: initialData.concept || '',
         problem: initialData.problem || '',
         audience: initialData.audience || '',
-        features: initialData.features || [''],
+        features: initialData.features?.length ? initialData.features : [''],
         tech: initialData.techStack || []
       }));
+      setStep(1); 
     }
   }, [initialData]);
 
@@ -55,7 +59,7 @@ const Wizard: React.FC<WizardProps> = ({ onClose, onSubmit, initialData }) => {
 
   const removeFeature = (idx: number) => {
     const newFeatures = formData.features.filter((_, i) => i !== idx);
-    setFormData(prev => ({ ...prev, features: newFeatures }));
+    setFormData(prev => ({ ...prev, features: newFeatures.length ? newFeatures : [''] }));
   };
 
   const toggleTech = (tech: string) => {
@@ -66,214 +70,229 @@ const Wizard: React.FC<WizardProps> = ({ onClose, onSubmit, initialData }) => {
     });
   };
 
-  const renderStep1 = () => (
-    <div className="space-y-6 animate-in slide-in-from-right duration-300">
-      <div>
-        <label className="block text-sm font-medium text-textMuted mb-2">Project Name</label>
-        <input 
-          type="text" 
-          value={formData.name}
-          onChange={(e) => updateField('name', e.target.value)}
-          placeholder="e.g., Fitness Tracking App"
-          className="w-full bg-surface border border-border rounded-lg p-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-textMain placeholder-textMuted/50"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-textMuted mb-2">Brief Concept</label>
-        <textarea 
-          value={formData.concept}
-          onChange={(e) => updateField('concept', e.target.value)}
-          placeholder="1-2 line overview of your product..."
-          rows={2}
-          className="w-full bg-surface border border-border rounded-lg p-3 focus:border-primary outline-none"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-textMuted mb-2">Problem to Solve</label>
-        <textarea 
-          value={formData.problem}
-          onChange={(e) => updateField('problem', e.target.value)}
-          placeholder="Describe the main pain point..."
-          rows={3}
-          className="w-full bg-surface border border-border rounded-lg p-3 focus:border-primary outline-none"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-textMuted mb-2">Target Audience</label>
-        <input 
-          type="text" 
-          value={formData.audience}
-          onChange={(e) => updateField('audience', e.target.value)}
-          placeholder="e.g., Remote workers aged 25-40"
-          className="w-full bg-surface border border-border rounded-lg p-3 focus:border-primary outline-none"
-        />
-      </div>
-    </div>
-  );
+  const handleAutoFill = async () => {
+    if (!formData.concept.trim()) {
+      alert("Please enter a brief concept first!");
+      return;
+    }
+    
+    setIsBrainstorming(true);
+    const specs = await generateProjectSpecs(formData.concept);
+    setIsBrainstorming(false);
 
-  const renderStep2 = () => (
-    <div className="space-y-6 animate-in slide-in-from-right duration-300">
-      <div className="flex justify-between items-center">
-        <label className="block text-sm font-medium text-textMuted">Key Features</label>
-        <span className="text-xs text-secondary">{formData.features.filter(f => f).length} added</span>
-      </div>
-      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-        {formData.features.map((feat, idx) => (
-          <div key={idx} className="flex gap-2 items-center group">
-            <span className="text-xs text-textMuted w-4">{idx + 1}.</span>
-            <input 
-              type="text"
-              value={feat}
-              onChange={(e) => updateFeature(idx, e.target.value)}
-              placeholder="Describe a feature..."
-              className="flex-1 bg-surface border border-border rounded-lg p-3 focus:border-primary outline-none"
-              autoFocus={idx === formData.features.length - 1}
-            />
-            {formData.features.length > 1 && (
-              <button 
-                onClick={() => removeFeature(idx)}
-                className="text-textMuted hover:text-red-400 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </div>
-        ))}
-        {formData.features.length < 10 && (
-          <button 
-            onClick={addFeature}
-            className="flex items-center gap-2 text-sm text-primary hover:text-primaryHover ml-6"
-          >
-            <Plus size={16} /> Add another feature
-          </button>
-        )}
-      </div>
-    </div>
-  );
+    if (specs) {
+      setFormData(prev => ({
+        ...prev,
+        name: specs.name || prev.name,
+        concept: specs.concept || prev.concept,
+        problem: specs.problem || prev.problem,
+        audience: specs.audience || prev.audience,
+        features: specs.features?.length ? specs.features : prev.features,
+        tech: specs.techStack || prev.tech
+      }));
+    }
+  };
 
-  const renderStep3 = () => (
-    <div className="space-y-6 animate-in slide-in-from-right duration-300">
-      <div>
-        <label className="block text-sm font-medium text-textMuted mb-3">Tech Preferences</label>
-        <div className="grid grid-cols-2 gap-3">
-          {['React', 'Next.js', 'Vue', 'Node.js', 'Python/Django', 'Go', 'Flutter', 'React Native', 'Firebase', 'AWS', 'Supabase'].map(tech => (
-            <div 
-              key={tech}
-              onClick={() => toggleTech(tech)}
-              className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                formData.tech.includes(tech) 
-                ? 'border-primary bg-primary/10 text-primary' 
-                : 'border-border bg-surface hover:border-textMuted'
-              }`}
-            >
-              <span className="text-sm">{tech}</span>
+  const renderStepContent = () => {
+    switch(step) {
+      case 0:
+        return (
+          <div className="space-y-6 animate-in slide-in-from-right duration-300">
+            <div className="text-center mb-8">
+              <h3 className="text-lg font-bold text-textHeading">What are you building?</h3>
+              <p className="text-textBody text-sm">Select a workflow to generate the right documentation.</p>
             </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-textMuted mb-2">Budget</label>
-          <select 
-            value={formData.budget}
-            onChange={(e) => updateField('budget', e.target.value)}
-            className="w-full bg-surface border border-border rounded-lg p-3 outline-none"
-          >
-            <option>Bootstrapped (&lt;$5k)</option>
-            <option>Small Budget ($5-25k)</option>
-            <option>Medium Budget ($25-100k)</option>
-            <option>Well Funded (&gt;$100k)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-textMuted mb-2">Timeline</label>
-          <select 
-            value={formData.timeline}
-            onChange={(e) => updateField('timeline', e.target.value)}
-            className="w-full bg-surface border border-border rounded-lg p-3 outline-none"
-          >
-            <option>ASAP (1-3 months)</option>
-            <option>Normal (3-6 months)</option>
-            <option>Flexible (6-12 months)</option>
-            <option>Long-term (12+ months)</option>
-          </select>
-        </div>
-      </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(FUNNELS).map(([id, funnel]: [string, any]) => {
+                 const Icon = id.includes('launch') ? Rocket : id.includes('feature') ? Zap : id.includes('tech') ? Code : id.includes('enterprise') ? Shield : Layers;
+                 const isSelected = selectedFunnelId === id;
+                 return (
+                   <div 
+                     key={id}
+                     onClick={() => setSelectedFunnelId(id)}
+                     className={`p-4 border rounded-card cursor-pointer transition-all hover:scale-[1.02] ${isSelected ? 'border-primaryForeground bg-primary/50' : 'border-border bg-surface hover:border-primary/50'}`}
+                   >
+                      <div className="flex items-center gap-3 mb-2">
+                         <div className={`p-2 rounded-button ${isSelected ? 'bg-primaryForeground text-white' : 'bg-surfaceSecondary text-icon'}`}>
+                            <Icon size={20} />
+                         </div>
+                         <h4 className="font-bold text-sm text-textHeading">{funnel.name}</h4>
+                      </div>
+                      <p className="text-xs text-textBody mb-3 min-h-[40px]">{funnel.description}</p>
+                   </div>
+                 );
+              })}
+            </div>
+          </div>
+        );
+      case 1:
+        return (
+          <div className="space-y-6 animate-in slide-in-from-right duration-300">
+            <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold text-textHeading">Project Details</h3>
+                <button 
+                   onClick={handleAutoFill}
+                   disabled={isBrainstorming || !formData.concept.trim()}
+                   className="text-xs flex items-center gap-2 px-3 py-1.5 bg-primary/80 text-primaryForeground border border-primaryForeground/20 rounded-pill hover:bg-primary disabled:opacity-50 transition-colors font-bold"
+                   title="Type a concept below then click here to auto-fill the rest!"
+                >
+                   {isBrainstorming ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
+                   Auto-fill with AI
+                </button>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-textBody mb-2">Brief Concept <span className="text-red-400">*</span></label>
+              <textarea 
+                value={formData.concept}
+                onChange={(e) => updateField('concept', e.target.value)}
+                placeholder="e.g. A marketplace for AI generated art prints..."
+                rows={2}
+                className="w-full bg-surfaceSecondary border border-transparent rounded-button p-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-textBody mb-2">Project Name</label>
+              <input type="text" value={formData.name} onChange={(e) => updateField('name', e.target.value)} placeholder="e.g., ArtFlow Market"
+                className="w-full bg-surfaceSecondary border border-transparent rounded-button p-3 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-textBody mb-2">Problem to Solve</label>
+              <textarea value={formData.problem} onChange={(e) => updateField('problem', e.target.value)} placeholder="Describe the main pain point..." rows={3}
+                className="w-full bg-surfaceSecondary border border-transparent rounded-button p-3 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-textBody mb-2">Target Audience</label>
+              <input type="text" value={formData.audience} onChange={(e) => updateField('audience', e.target.value)} placeholder="e.g., Digital artists and interior designers"
+                className="w-full bg-surfaceSecondary border border-transparent rounded-button p-3 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-6 animate-in slide-in-from-right duration-300">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-bold text-textHeading">Key Features</h3>
+              <span className="text-xs text-primaryForeground font-semibold">{formData.features.filter(f => f).length} added</span>
+            </div>
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+              {formData.features.map((feat, idx) => (
+                <div key={idx} className="flex gap-2 items-center group">
+                  <span className="text-xs text-textMuted w-4">{idx + 1}.</span>
+                  <input type="text" value={feat} onChange={(e) => updateFeature(idx, e.target.value)} placeholder="Describe a feature..."
+                    className="flex-1 bg-surfaceSecondary border border-transparent rounded-button p-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    autoFocus={idx === formData.features.length - 1 && !feat} />
+                  {formData.features.length > 1 && (
+                    <button onClick={() => removeFeature(idx)} className="text-textMuted hover:text-red-500 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {formData.features.length < 10 && (
+                <button onClick={addFeature} className="flex items-center gap-2 text-sm text-primaryForeground hover:underline ml-6">
+                  <Plus size={16} /> Add another feature
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-6 animate-in slide-in-from-right duration-300">
+            <h3 className="text-lg font-bold text-textHeading">Preferences</h3>
+            <div>
+              <label className="block text-sm font-medium text-textBody mb-3">Tech Stack</label>
+              <div className="grid grid-cols-3 gap-3">
+                {['React', 'Next.js', 'Vue.js', 'Node.js', 'Python', 'Go', 'Flutter', 'Firebase', 'AWS', 'Supabase'].map(tech => (
+                  <div key={tech} onClick={() => toggleTech(tech)}
+                    className={`p-3 text-center rounded-button border cursor-pointer transition-all text-sm ${
+                      formData.tech.includes(tech) 
+                      ? 'border-primaryForeground bg-primary/80 text-primaryForeground font-bold' 
+                      : 'border-border bg-surface hover:border-textMuted'
+                    }`}>
+                    {tech}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-textBody mb-2">Budget</label>
+                <select value={formData.budget} onChange={(e) => updateField('budget', e.target.value)}
+                  className="w-full bg-surfaceSecondary border border-transparent rounded-button p-3 outline-none appearance-none">
+                  <option>Bootstrapped (&lt;$5k)</option><option>Small Budget ($5-25k)</option>
+                  <option>Medium Budget ($25-100k)</option><option>Well Funded (&gt;$100k)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-textBody mb-2">Timeline</label>
+                <select value={formData.timeline} onChange={(e) => updateField('timeline', e.target.value)}
+                  className="w-full bg-surfaceSecondary border border-transparent rounded-button p-3 outline-none appearance-none">
+                  <option>ASAP (1-3 months)</option><option>Normal (3-6 months)</option>
+                  <option>Flexible (6-12 months)</option><option>Long-term (12+ months)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        );
+      default: return null;
+    }
+  };
 
-      <div className="pt-4 border-t border-border">
-         <p className="text-sm font-medium text-textMuted mb-3">Included in generation package:</p>
-         <div className="grid grid-cols-2 gap-2 text-xs text-textMuted">
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> Product Requirements (PRD)</div>
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> Tech Architecture</div>
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> AI Competitor Analysis <span className="text-[10px] bg-secondary/20 text-secondary px-1 rounded">NEW</span></div>
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> Roadmap & Milestones</div>
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> API Specifications</div>
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> Business Requirements</div>
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> Go-to-Market Strategy</div>
-            <div className="flex items-center gap-2"><Check size={14} className="text-primary"/> Database Schema</div>
-         </div>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-2xl bg-background border border-border rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-        {/* Header */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-2xl bg-surface border border-border rounded-card shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-6 border-b border-border flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="text-primary" size={20} />
-              {initialData ? `Create: ${initialData.name}` : 'Create New Project'}
+            <h2 className="text-xl font-bold text-textHeading flex items-center gap-2">
+              <Sparkles className="text-primaryForeground" size={20} />
+              {initialData ? `Create from Template` : 'Create New Project'}
             </h2>
-            <p className="text-sm text-textMuted">Step {step} of 3</p>
+            <p className="text-sm text-textBody">Step {step + 1} of 4</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-surface rounded-full text-textMuted">
+          <button onClick={onClose} className="p-2 hover:bg-surfaceSecondary rounded-full text-icon">
             <X size={20} />
           </button>
         </div>
 
-        {/* Progress */}
-        <div className="h-1 bg-surface w-full">
+        <div className="h-1 bg-surfaceSecondary w-full">
           <div 
-            className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300"
-            style={{ width: `${(step / 3) * 100}%` }}
+            className="h-full bg-primaryForeground transition-all duration-300"
+            style={{ width: `${((step + 1) / 4) * 100}%` }}
           />
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
+        <div className="p-8 overflow-y-auto flex-1 no-scrollbar">
+          {renderStepContent()}
         </div>
 
-        {/* Footer */}
         <div className="p-6 border-t border-border flex justify-between bg-surface/50">
           <button 
-            onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-            className="px-6 py-2.5 rounded-lg text-sm font-medium text-textMuted hover:text-textMain hover:bg-surface transition-colors"
+            onClick={() => step > 0 ? setStep(step - 1) : onClose()}
+            className="px-6 py-2.5 rounded-button text-sm font-bold text-textBody hover:text-textHeading hover:bg-surfaceSecondary transition-colors"
           >
-            {step === 1 ? 'Cancel' : 'Back'}
+            {step === 0 ? 'Cancel' : 'Back'}
           </button>
           
           <button 
             onClick={() => {
               if (step < 3) setStep(step + 1);
-              else onSubmit(formData);
+              else onSubmit({ ...formData, funnelId: selectedFunnelId });
             }}
-            disabled={step === 1 && !formData.name}
+            disabled={step === 1 && !formData.name && !isBrainstorming}
             className={`
-              flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold text-white transition-all
-              ${step === 1 && !formData.name 
-                ? 'bg-primary/50 cursor-not-allowed' 
-                : 'bg-primary hover:bg-primaryHover shadow-lg shadow-primary/25'}
+              flex items-center gap-2 px-6 py-2.5 rounded-button text-sm font-bold text-white transition-all
+              ${(step === 1 && !formData.name) || isBrainstorming
+                ? 'bg-accentDark/50 cursor-not-allowed' 
+                : 'bg-accentDark hover:opacity-90 shadow-lg'}
             `}
           >
+            {isBrainstorming ? <Loader2 size={16} className="animate-spin" /> : null}
             {step === 3 ? 'Generate Documents' : 'Next Step'}
-            {step < 3 && <ArrowRight size={16} />}
-            {step === 3 && <Sparkles size={16} />}
+            {step < 3 && !isBrainstorming && <ArrowRight size={16} />}
+            {step === 3 && !isBrainstorming && <Sparkles size={16} />}
           </button>
         </div>
       </div>
